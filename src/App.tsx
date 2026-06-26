@@ -186,7 +186,7 @@ export default function App() {
                     </div>
                 ) : (
                     <div className="flex-1 overflow-y-auto bg-slate-100 flex justify-center p-12">
-                        <div className="w-full max-w-[1200px] bg-white shadow-xl rounded-[40px] border border-slate-200">
+                        <div className="w-full max-w-[1200px] bg-white shadow-xl rounded-[40px] border border-slate-200 overflow-hidden flex flex-col h-fit min-h-[800px]">
                             <Suspense fallback={<div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-bold bg-white"><i className="ph-bold ph-spinner animate-spin mr-2"></i>Loading Documentation...</div>}>
                                 <DocumentationPanel />
                             </Suspense>
