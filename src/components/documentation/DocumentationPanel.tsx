@@ -258,56 +258,72 @@ export const DocumentationPanel = () => {
                 </div>
 
                 {/* === SEQUENCE SUMMARY === */}
-                <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-xl relative overflow-hidden">
-                    <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-400 via-slate-900 to-slate-900"></div>
+                <div className="bg-slate-900 rounded-[2rem] p-8 lg:p-10 border border-slate-800 shadow-2xl relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-500 via-slate-900 to-slate-900"></div>
+                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent"></div>
+                    
                     <div className="relative z-10">
-                        <h3 className="text-white font-extrabold text-lg mb-1">Data Flow Sequence (Full Journey)</h3>
-                        <p className="text-slate-400 text-xs mb-6">เส้นทางของข้อมูล 1 รอบวิ่ง ตั้งแต่แตะริสแบนด์จนถึงหน้าจอมือถือ</p>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center border border-brand-500/30">
+                                <i className="ph-fill ph-git-merge text-brand-400 text-lg"></i>
+                            </div>
+                            <h3 className="text-white font-black text-xl tracking-wide">Data Flow Sequence</h3>
+                        </div>
+                        <p className="text-slate-400 text-sm mb-8 font-medium pl-11">เส้นทางของข้อมูล 1 รอบวิ่ง ตั้งแต่แตะริสแบนด์จนถึงหน้าจอมือถือ (Full Journey)</p>
                         
-                        <div className="space-y-0">
+                        <div className="space-y-0 pl-3">
                             {[
-                                { num: 1, icon: 'ph-contactless-payment', title: 'NFC Scan', desc: 'นักวิ่งแตะริสแบนด์ที่เสาสแกน → สร้าง JSON Payload', layer: 'BE', layerColor: 'text-blue-400 bg-blue-900/50 border-blue-700' },
-                                { num: 2, icon: 'ph-queue', title: 'Message Queue', desc: 'เข้าคิว Kafka/MQTT ป้องกัน Server ล่มจาก Data Flood', layer: 'BE', layerColor: 'text-blue-400 bg-blue-900/50 border-blue-700' },
-                                { num: 3, icon: 'ph-funnel', title: 'Validate', desc: 'กรองข้อมูลขยะ — สแกนรัว? ขี่สกู๊ตเตอร์? Payload เน่า?', layer: 'BE', layerColor: 'text-rose-400 bg-rose-900/50 border-rose-700' },
-                                { num: 4, icon: 'ph-calculator', title: 'Calculate Lap', desc: 'คำนวณ duration = timestamp นี้ − timestamp รอบก่อนหน้า', layer: 'BE', layerColor: 'text-blue-400 bg-blue-900/50 border-blue-700' },
-                                { num: 5, icon: 'ph-trophy', title: 'Check PB', desc: 'เทียบว่าเร็วกว่าสถิติเดิมไหม → ถ้าใช่ตั้ง is_pb = true', layer: 'BE + DB', layerColor: 'text-purple-400 bg-purple-900/50 border-purple-700' },
-                                { num: 6, icon: 'ph-hard-drives', title: 'Save to DB', desc: 'บันทึกถาวรลง PostgreSQL + อัปเดต Redis Cache', layer: 'DB', layerColor: 'text-purple-400 bg-purple-900/50 border-purple-700' },
-                                { num: 7, icon: 'ph-broadcast', title: 'WebSocket Push', desc: 'ดันข้อมูลผลลัพธ์ไปยังแอปมือถือแบบ Real-time', layer: 'BE → FE', layerColor: 'text-emerald-400 bg-emerald-900/50 border-emerald-700' },
-                                { num: 8, icon: 'ph-atom', title: 'React State', desc: 'รับข้อมูล → Optimistic Update → เรียงลำดับ → เช็ค PB', layer: 'FE', layerColor: 'text-brand-400 bg-brand-500/20 border-brand-700' },
-                                { num: 9, icon: 'ph-device-mobile', title: 'UI Update', desc: 'อัปเดตกราฟ + ตัวเลข → ถ้า PB ก็กระพริบฉลอง!', layer: 'FE', layerColor: 'text-brand-400 bg-brand-500/20 border-brand-700' },
+                                { num: 1, icon: 'ph-contactless-payment', title: 'NFC Scan', desc: 'นักวิ่งแตะริสแบนด์ที่เสาสแกน → สร้าง JSON Payload', layer: 'BE', layerColor: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
+                                { num: 2, icon: 'ph-queue', title: 'Message Queue', desc: 'เข้าคิว Kafka/MQTT ป้องกัน Server ล่มจาก Data Flood', layer: 'BE', layerColor: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
+                                { num: 3, icon: 'ph-funnel', title: 'Validate', desc: 'กรองข้อมูลขยะ — สแกนรัว? ขี่สกู๊ตเตอร์? Payload เน่า?', layer: 'BE', layerColor: 'text-rose-400 bg-rose-500/10 border-rose-500/30' },
+                                { num: 4, icon: 'ph-calculator', title: 'Calculate Lap', desc: 'คำนวณ duration = timestamp นี้ − timestamp รอบก่อนหน้า', layer: 'BE', layerColor: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
+                                { num: 5, icon: 'ph-trophy', title: 'Check PB', desc: 'เทียบว่าเร็วกว่าสถิติเดิมไหม → ถ้าใช่ตั้ง is_pb = true', layer: 'BE + DB', layerColor: 'text-purple-400 bg-purple-500/10 border-purple-500/30' },
+                                { num: 6, icon: 'ph-hard-drives', title: 'Save to DB', desc: 'บันทึกถาวรลง PostgreSQL + อัปเดต Redis Cache', layer: 'DB', layerColor: 'text-purple-400 bg-purple-500/10 border-purple-500/30' },
+                                { num: 7, icon: 'ph-broadcast', title: 'WebSocket Push', desc: 'ดันข้อมูลผลลัพธ์ไปยังแอปมือถือแบบ Real-time', layer: 'BE → FE', layerColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
+                                { num: 8, icon: 'ph-atom', title: 'React State', desc: 'รับข้อมูล → Optimistic Update → เรียงลำดับ → เช็ค PB', layer: 'FE', layerColor: 'text-brand-400 bg-brand-500/10 border-brand-500/30' },
+                                { num: 9, icon: 'ph-device-mobile', title: 'UI Update', desc: 'อัปเดตกราฟ + ตัวเลข → ถ้า PB ก็กระพริบฉลอง!', layer: 'FE', layerColor: 'text-brand-400 bg-brand-500/10 border-brand-500/30' },
                             ].map((step, i) => (
-                                <div key={i} className="flex items-stretch gap-4">
+                                <div key={i} className="flex items-stretch gap-6 group cursor-default">
                                     {/* Timeline line + dot */}
                                     <div className="flex flex-col items-center w-8 shrink-0">
-                                        <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-black shrink-0 ${i === 0 ? 'border-amber-400 text-amber-400' : i === 8 ? 'border-brand-400 text-brand-400' : 'border-slate-600 text-slate-400'}`}>
+                                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black shrink-0 transition-all duration-300 group-hover:scale-110 z-10 
+                                            ${i === 0 ? 'border-amber-400 text-amber-400 bg-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
+                                            : i === 8 ? 'border-brand-400 text-brand-400 bg-brand-400/20 shadow-[0_0_15px_rgba(228,76,112,0.4)]' 
+                                            : 'border-slate-700 text-slate-400 bg-slate-900 group-hover:border-slate-500 group-hover:text-slate-300'}`}>
                                             {step.num}
                                         </div>
-                                        {i < 8 && <div className="w-px flex-1 bg-slate-700 min-h-[16px]"></div>}
+                                        {i < 8 && <div className={`w-0.5 flex-1 min-h-[32px] transition-colors duration-500
+                                            ${i < 4 ? 'bg-gradient-to-b from-blue-500/20 to-blue-500/20 group-hover:from-blue-500/50 group-hover:to-blue-500/50' 
+                                            : i === 4 ? 'bg-gradient-to-b from-blue-500/20 to-purple-500/20 group-hover:from-blue-500/50 group-hover:to-purple-500/50' 
+                                            : i === 5 ? 'bg-gradient-to-b from-purple-500/20 to-emerald-500/20 group-hover:from-purple-500/50 group-hover:to-emerald-500/50' 
+                                            : i === 6 ? 'bg-gradient-to-b from-emerald-500/20 to-brand-500/20 group-hover:from-emerald-500/50 group-hover:to-brand-500/50' 
+                                            : 'bg-brand-500/20 group-hover:bg-brand-500/50'}`}></div>}
                                     </div>
                                     {/* Content */}
-                                    <div className={`flex-1 flex items-center gap-4 rounded-xl px-4 py-3 mb-1 transition-colors hover:bg-slate-800/50 ${i === 8 ? 'mb-0' : ''}`}>
-                                        <div className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${step.layerColor}`}>
-                                            <i className={`ph-fill ${step.icon} text-lg`}></i>
+                                    <div className={`flex-1 flex items-center gap-5 rounded-2xl px-5 py-4 mb-3 transition-all duration-300 group-hover:bg-slate-800/80 group-hover:translate-x-2 border border-transparent group-hover:border-slate-700/50 group-hover:shadow-lg ${i === 8 ? 'mb-0' : ''}`}>
+                                        <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 ${step.layerColor}`}>
+                                            <i className={`ph-fill ${step.icon} text-2xl`}></i>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-0.5">
-                                                <span className="text-white font-bold text-xs">{step.title}</span>
-                                                <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md border ${step.layerColor}`}>{step.layer}</span>
+                                            <div className="flex items-center gap-3 mb-1.5">
+                                                <span className="text-white font-bold text-sm tracking-wide">{step.title}</span>
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${step.layerColor}`}>{step.layer}</span>
                                             </div>
-                                            <p className="text-slate-400 text-[11px] leading-snug">{step.desc}</p>
+                                            <p className="text-slate-400 text-xs font-medium leading-relaxed group-hover:text-slate-300 transition-colors">{step.desc}</p>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                         
-                        <div className="mt-6 pt-4 border-t border-slate-700 flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-emerald-900/50 border border-emerald-700 flex items-center justify-center">
-                                <i className="ph-bold ph-timer text-emerald-400 text-lg"></i>
+                        <div className="mt-8 pt-6 border-t border-slate-800 flex items-center gap-5 bg-slate-800/40 p-5 rounded-2xl relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative z-10">
+                                <i className="ph-bold ph-lightning text-emerald-400 text-2xl animate-pulse"></i>
                             </div>
-                            <div>
-                                <p className="text-white text-xs font-bold">Total Latency: &lt; 1 วินาที</p>
-                                <p className="text-slate-500 text-[10px] font-medium">Sub-second end-to-end ตาม NFR-02 ของ SRS</p>
+                            <div className="relative z-10">
+                                <p className="text-emerald-400 text-sm font-black tracking-wider uppercase mb-0.5">Total Latency: &lt; 1 วินาที</p>
+                                <p className="text-slate-400 text-xs font-medium">Sub-second end-to-end ตาม NFR-02 ของเอกสาร SRS</p>
                             </div>
                         </div>
                     </div>
