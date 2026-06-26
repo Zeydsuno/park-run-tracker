@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: 'Kanit', 'Inter', sans-serif;
+  --color-brand-50: #fdf2f5;
+  --color-brand-100: #fbe5eb;
+  --color-brand-500: #eb6686;
+  --color-brand-600: #e44c70;
+  --color-brand-700: #cc3b5c;
+}
+
+body {
+  font-family: 'Kanit', 'Inter', sans-serif;
+  background-color: #f1f5f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0.5; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
