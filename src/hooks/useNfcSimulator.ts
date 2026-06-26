@@ -9,8 +9,9 @@ export function useNfcSimulator() {
     const [isAutoScanning, setIsAutoScanning] = useState(false);
     const [wsLogs, setWsLogs] = useState<string[]>([]);
     const [isOffline, setIsOffline] = useState(false);
+    const [lastLatency, setLastLatency] = useState<number | null>(null);
     const lastScanTimeRef = useRef<number>(0);
-    const offlineQueueRef = useRef<WsPayload[]>([]);
+    const [offlineQueue, setOfflineQueue] = useState<WsPayload[]>([]);
 
     const currentPb = useMemo(() => laps.length > 0 ? Math.min(...laps.map(l => l.duration)) : Infinity, [laps]);
 
@@ -62,17 +63,21 @@ export function useNfcSimulator() {
         }
 
         const is_pb = duration_sec < currentPb;
-        const mockPayload: WsPayload = { event: "LAP_COMPLETED", data: { runner_id, lap_count: laps.length + 1, duration_sec, is_pb, timestamp } };
+        const mockPayload: WsPayload = { event: "LAP_COMPLETED", data: { event_id: settings.eventId, runner_id, lap_count: laps.length + 1, duration_sec, is_pb, timestamp } };
         
         if (isOffline) {
-            offlineQueueRef.current.push(mockPayload);
+            setOfflineQueue(prev => [...prev, mockPayload]);
             setWsLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [OFFLINE] Saved to local queue: ${runner_id}`]);
         } else {
-            setWsLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] WSS: ${JSON.stringify(mockPayload)}`]);
+            // Simulate NFR-02 sub-second latency (between 45ms and 210ms)
+            const simulatedLatency = Math.floor(Math.random() * 165) + 45;
+            setLastLatency(simulatedLatency);
+
+            setWsLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] WSS: ${JSON.stringify(mockPayload)} (Latency: ${simulatedLatency}ms ⚡)`]);
             
             if (runner_id === TARGET_USER_ID) {
                 const lap_no = laps.length + 1;
-                setLaps(prev => [{ id: lap_no, duration: duration_sec, isPb: is_pb, timestamp }, ...prev]);
+                setLaps(prev => [{ id: lap_no, eventId: settings.eventId, duration: duration_sec, isPb: is_pb, timestamp }, ...prev]);
             }
         }
     };
@@ -82,26 +87,28 @@ export function useNfcSimulator() {
         setIsOffline(prev => {
             const willBeOffline = !prev;
             if (!willBeOffline) {
-                if (offlineQueueRef.current.length > 0) {
-                    const queue = [...offlineQueueRef.current];
-                    setWsLogs(ws => [...ws, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] RECONNECT: Flushing ${queue.length} items from queue...`]);
-                    
-                    const myLaps = queue
-                        .filter(p => p.data.runner_id === TARGET_USER_ID)
-                        .map((p: WsPayload, index: number) => ({
-                            id: laps.length + index + 1,
-                            duration: p.data.duration_sec,
-                            isPb: p.data.is_pb,
-                            timestamp: p.data.timestamp
-                        }));
+                setOfflineQueue(queue => {
+                    if (queue.length > 0) {
+                        setWsLogs(ws => [...ws, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] RECONNECT: Flushing ${queue.length} items from queue...`]);
+                        
+                        const myLaps = queue
+                            .filter(p => p.data.runner_id === TARGET_USER_ID)
+                            .map((p: WsPayload, index: number) => ({
+                                id: laps.length + index + 1,
+                                eventId: p.data.event_id,
+                                duration: p.data.duration_sec,
+                                isPb: p.data.is_pb,
+                                timestamp: p.data.timestamp
+                            }));
 
-                    if (myLaps.length > 0) {
-                        setLaps(currentLaps => [...myLaps.reverse(), ...currentLaps]);
+                        if (myLaps.length > 0) {
+                            setLaps(currentLaps => [...myLaps.reverse(), ...currentLaps]);
+                        }
+                    } else {
+                        setWsLogs(ws => [...ws, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] SYSTEM ONLINE`]);
                     }
-                    offlineQueueRef.current = [];
-                } else {
-                    setWsLogs(ws => [...ws, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] SYSTEM ONLINE`]);
-                }
+                    return [];
+                });
             } else {
                 setWsLogs(ws => [...ws, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] SYSTEM OFFLINE: Queue enabled`]);
             }
@@ -124,8 +131,8 @@ export function useNfcSimulator() {
         const timestamp6 = new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
         const timestamp5 = new Date(Date.now() - 5000).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
         
-        const lap6 = { id: lap_no_6, duration: 300, isPb: false, timestamp: timestamp6 };
-        const lap5 = { id: lap_no_5, duration: 310, isPb: false, timestamp: timestamp5 };
+        const lap6 = { id: lap_no_6, eventId: settings.eventId, duration: 300, isPb: false, timestamp: timestamp6 };
+        const lap5 = { id: lap_no_5, eventId: settings.eventId, duration: 310, isPb: false, timestamp: timestamp5 };
 
         setWsLogs(prev => [
             ...prev, 
@@ -135,18 +142,49 @@ export function useNfcSimulator() {
         setLaps(prev => [lap5, lap6, ...prev]);
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // NFR-03 Peak Spike Simulator
+    const triggerPeakSpike = () => {
+        const SPIKE_COUNT = 100;
+        const newLogs: string[] = [];
+        let pbsBeaten = 0;
+        
+        setWsLogs(prev => [...prev, `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [ALERT] 🚀 INITIATING NFR-03 PEAK SPIKE: 100 concurrent scans in 1s...`]);
+
+        for (let i = 0; i < SPIKE_COUNT; i++) {
+            const runner_id = `U-${Math.floor(Math.random() * 900) + 100}`;
+            const duration_sec = Math.floor(Math.random() * 90) + 270;
+            const is_pb = Math.random() > 0.8;
+            if (is_pb) pbsBeaten++;
+            
+            const timestamp = new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            const mockPayload: WsPayload = { event: "LAP_COMPLETED", data: { runner_id, lap_count: Math.floor(Math.random() * 5) + 1, duration_sec, is_pb, timestamp } };
+            
+            newLogs.push(`[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [INFO] WSS: ${JSON.stringify(mockPayload)}`);
+        }
+
+        setTimeout(() => {
+            setWsLogs(prev => [
+                ...prev, 
+                ...newLogs,
+                `[${new Date().toLocaleTimeString('en-US', {hour12: false})}] [SUCCESS] Processed ${SPIKE_COUNT} scans (${pbsBeaten} PBs). Peak CPU: 42%. DB Latency Avg: 18ms. No bottlenecks detected.`
+            ]);
+            setLastLatency(Math.floor(Math.random() * 50) + 180); // Average latency under heavy load
+        }, 800);
+    };
+
     useEffect(() => {
         if (!isAutoScanning) return;
         const timer = setInterval(() => triggerNfcScan(false, true), 1500); 
         return () => clearInterval(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAutoScanning, isOffline, TARGET_USER_ID]);
 
     const resetSimulator = () => {
         setLaps([]);
         setWsLogs([]);
-        offlineQueueRef.current = [];
+        setLastLatency(null);
+        setOfflineQueue([]);
     };
 
-    return { laps, isAutoScanning, setIsAutoScanning, wsLogs, setWsLogs, triggerNfcScan, isOffline, toggleOffline, triggerGhostPayload, triggerOutOfOrderSync, resetSimulator };
+    return { laps, isAutoScanning, setIsAutoScanning, wsLogs, setWsLogs, triggerNfcScan, isOffline, toggleOffline, triggerGhostPayload, triggerOutOfOrderSync, resetSimulator, lastLatency, triggerPeakSpike, offlineQueue };
 }

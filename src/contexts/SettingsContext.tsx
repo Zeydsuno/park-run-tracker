@@ -5,6 +5,9 @@ interface SettingsState {
     runnerId: string;
     pushEnabled: boolean;
     language: string;
+    weightKg: number;
+    eventId: number;
+    eventDistance: number;
 }
 
 interface SettingsContextType {
@@ -17,6 +20,9 @@ const defaultSettings: SettingsState = {
     runnerId: 'U-001',
     pushEnabled: true,
     language: 'TH',
+    weightKg: 65,
+    eventId: 101, // e.g. Lumpini Park
+    eventDistance: 2.5,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

@@ -20,8 +20,12 @@ export const DashboardTab = ({ laps, personalBest }: { laps: Lap[], personalBest
     const { settings } = useSettings();
     const isEn = settings.language === 'EN';
 
-    const totalDistance = (laps.length * 2.5).toFixed(1);
-    const calories = laps.length * 150;
+    // Calculate Derivable Data dynamically based on Settings Profile (matches DB schema)
+    const distanceKm = laps.length * settings.eventDistance;
+    const totalDistance = distanceKm.toFixed(1);
+    
+    // Calorie formula: Distance (km) * Weight (kg) * 1.036
+    const calories = Math.round(distanceKm * settings.weightKg * 1.036);
     
     // Format chartData for Recharts (Get the latest 7 laps)
     const chartData = laps.slice(-7).map(lap => ({

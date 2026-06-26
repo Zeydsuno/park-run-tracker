@@ -1,12 +1,13 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, lazy, Suspense } from 'react';
 import { useSettings } from './contexts/SettingsContext';
 import { useNfcSimulator } from './hooks/useNfcSimulator';
-import { SimulatorPanel } from './components/simulator/SimulatorPanel';
-import { DashboardTab } from './components/dashboard/DashboardTab';
 import { LiveTab } from './components/dashboard/LiveTab';
 import { LogTab } from './components/dashboard/LogTab';
 import { SettingsModal } from './components/shared/SettingsModal';
-import { DocumentationPanel } from './components/documentation/DocumentationPanel';
+
+const SimulatorPanel = lazy(() => import('./components/simulator/SimulatorPanel').then(module => ({ default: module.SimulatorPanel })));
+const DashboardTab = lazy(() => import('./components/dashboard/DashboardTab').then(module => ({ default: module.DashboardTab })));
+const DocumentationPanel = lazy(() => import('./components/documentation/DocumentationPanel').then(module => ({ default: module.DocumentationPanel })));
 
 export default function App() {
     const { 
@@ -20,7 +21,10 @@ export default function App() {
         toggleOffline, 
         triggerGhostPayload,
         triggerOutOfOrderSync,
-        resetSimulator
+        resetSimulator,
+        lastLatency,
+        triggerPeakSpike,
+        offlineQueue
     } = useNfcSimulator();
     
     const { settings } = useSettings();
@@ -102,18 +106,23 @@ export default function App() {
                 {adminTab === 'simulator' ? (
                     <div className="w-full flex flex-col bg-white border-t border-slate-200 overflow-y-auto">
                         <div className="hidden lg:flex w-full bg-slate-50 border-b border-slate-200 shrink-0 z-10 shadow-[0_5px_15px_rgba(0,0,0,0.03)] flex-col">
-                            <SimulatorPanel 
-                                triggerNfcScan={handleManualScan} 
-                                isAutoScanning={isAutoScanning} 
-                                setIsAutoScanning={setIsAutoScanning} 
-                                wsLogs={wsLogs} 
-                                setWsLogs={setWsLogs}
-                                isOffline={isOffline}
-                                toggleOffline={toggleOffline}
-                                triggerGhostPayload={triggerGhostPayload}
-                                triggerOutOfOrderSync={triggerOutOfOrderSync}
-                                resetSimulator={resetSimulator}
-                            />
+                            <Suspense fallback={<div className="h-[250px] flex items-center justify-center text-slate-400 text-sm font-bold animate-pulse"><i className="ph-bold ph-spinner animate-spin mr-2"></i>Loading Simulator Engine...</div>}>
+                                <SimulatorPanel 
+                                    triggerNfcScan={handleManualScan} 
+                                    isAutoScanning={isAutoScanning} 
+                                    setIsAutoScanning={setIsAutoScanning} 
+                                    wsLogs={wsLogs} 
+                                    setWsLogs={setWsLogs}
+                                    isOffline={isOffline}
+                                    toggleOffline={toggleOffline}
+                                    triggerGhostPayload={triggerGhostPayload}
+                                    triggerOutOfOrderSync={triggerOutOfOrderSync}
+                                    resetSimulator={resetSimulator}
+                                    lastLatency={lastLatency}
+                                    triggerPeakSpike={triggerPeakSpike}
+                                    offlineQueue={offlineQueue}
+                                />
+                            </Suspense>
                         </div>
 
                         <div className="flex-1 flex justify-center relative lg:bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] lg:[background-size:20px_20px] bg-white lg:bg-slate-50 lg:py-12 shrink-0 min-h-[900px]">
@@ -142,7 +151,11 @@ export default function App() {
                                 </div>
                             </div>
 
-                            {activeTab === 'dashboard' && <DashboardTab laps={sortedLaps} personalBest={personalBest} />}
+                            {activeTab === 'dashboard' && (
+                                <Suspense fallback={<div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs font-bold mt-20"><i className="ph-bold ph-spinner animate-spin text-2xl mb-2 text-brand-400"></i>Rendering Analytics...</div>}>
+                                    <DashboardTab laps={sortedLaps} personalBest={personalBest} />
+                                </Suspense>
+                            )}
                             {activeTab === 'live' && <LiveTab laps={sortedLaps} isOffline={isOffline} flashId={flashId} />}
                             {activeTab === 'log' && <LogTab laps={sortedLaps} flashId={flashId} />}
                         </div>
@@ -173,8 +186,10 @@ export default function App() {
                     </div>
                 ) : (
                     <div className="flex-1 overflow-y-auto bg-slate-100 flex justify-center p-12">
-                        <div className="w-full max-w-[1200px] bg-white shadow-xl rounded-[40px] border border-slate-200 h-fit">
-                            <DocumentationPanel />
+                        <div className="w-full max-w-[1200px] bg-white shadow-xl rounded-[40px] border border-slate-200">
+                            <Suspense fallback={<div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-bold bg-white"><i className="ph-bold ph-spinner animate-spin mr-2"></i>Loading Documentation...</div>}>
+                                <DocumentationPanel />
+                            </Suspense>
                         </div>
                     </div>
                 )}

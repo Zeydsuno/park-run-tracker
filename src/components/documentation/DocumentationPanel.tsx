@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { ActivityDiagram } from './ActivityDiagram';
+import { UseCaseDiagram } from './UseCaseDiagram';
+import { DatabaseSchema } from './DatabaseSchema';
 
 type NodeId = 'ui' | 'react' | 'ws' | 'mqtt' | 'lambda' | 'nfc' | 'redis' | 'pg' | 'edge' | null;
 
@@ -128,6 +131,7 @@ const connections: { from: NodeId; to: NodeId; label: string; protocol: string }
 export const DocumentationPanel = () => {
     const [activeNode, setActiveNode] = useState<NodeId>(null);
     const [activeLayer, setActiveLayer] = useState<'presentation' | 'application' | 'data' | null>(null);
+    const [diagramTab, setDiagramTab] = useState<'activity' | 'usecase' | 'db'>('activity');
 
     const activeNodeData = nodes.find(n => n.id === activeNode);
     const activeConnections = connections.filter(c => c.from === activeNode || c.to === activeNode);
@@ -165,7 +169,7 @@ export const DocumentationPanel = () => {
         );
     };
 
-    const Arrow = ({ direction = 'right', highlight = false }: { direction?: 'right' | 'down'; highlight?: boolean }) => (
+    const renderArrow = (direction: 'right' | 'down' = 'right', highlight: boolean = false) => (
         <div className={`flex items-center justify-center shrink-0 transition-all duration-300 ${highlight ? 'opacity-100 scale-110' : activeNode ? 'opacity-20' : 'opacity-40'}`}>
             <i className={`ph-bold ${direction === 'right' ? 'ph-arrow-right' : 'ph-arrow-down'} text-xl ${highlight ? 'text-brand-500' : 'text-slate-300'}`}></i>
         </div>
@@ -194,9 +198,9 @@ export const DocumentationPanel = () => {
                     </div>
                     <div className="flex items-center justify-center gap-6">
                         {renderNode(presentationNodes[2])}
-                        <Arrow direction="right" highlight={activeNode === 'ws' || activeNode === 'react'} />
+                        {renderArrow('right', activeNode === 'ws' || activeNode === 'react', activeNode)}
                         {renderNode(presentationNodes[1])}
-                        <Arrow direction="right" highlight={activeNode === 'react' || activeNode === 'ui'} />
+                        {renderArrow('right', activeNode === 'react' || activeNode === 'ui', activeNode)}
                         {renderNode(presentationNodes[0])}
                     </div>
                 </div>
@@ -219,9 +223,9 @@ export const DocumentationPanel = () => {
                     </div>
                     <div className="flex items-center justify-center gap-5">
                         {renderNode(applicationNodes[2])}
-                        <Arrow direction="right" highlight={activeNode === 'nfc' || activeNode === 'mqtt'} />
+                        {renderArrow('right', activeNode === 'nfc' || activeNode === 'mqtt', activeNode)}
                         {renderNode(applicationNodes[0])}
-                        <Arrow direction="right" highlight={activeNode === 'mqtt' || activeNode === 'lambda'} />
+                        {renderArrow('right', activeNode === 'mqtt' || activeNode === 'lambda', activeNode)}
                         {renderNode(applicationNodes[1])}
                     </div>
                 </div>
@@ -229,15 +233,15 @@ export const DocumentationPanel = () => {
                 {/* Down arrow: BE reads/writes to DB */}
                 <div className="flex justify-center gap-24">
                     <div className="flex flex-col items-center gap-0.5">
-                        <Arrow direction="down" highlight={activeNode === 'lambda' || activeNode === 'redis'} />
+                        {renderArrow('down', activeNode === 'lambda' || activeNode === 'redis')}
                         <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full transition-colors ${activeNode === 'lambda' || activeNode === 'redis' ? 'text-purple-600 bg-purple-100' : 'text-slate-300'}`}>GET/SET</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5">
-                        <Arrow direction="down" highlight={activeNode === 'lambda' || activeNode === 'pg'} />
+                        {renderArrow('down', activeNode === 'lambda' || activeNode === 'pg')}
                         <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full transition-colors ${activeNode === 'lambda' || activeNode === 'pg' ? 'text-blue-600 bg-blue-100' : 'text-slate-300'}`}>INSERT</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5">
-                        <Arrow direction="down" highlight={activeNode === 'nfc' || activeNode === 'edge'} />
+                        {renderArrow('down', activeNode === 'nfc' || activeNode === 'edge')}
                         <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full transition-colors ${activeNode === 'nfc' || activeNode === 'edge' ? 'text-orange-600 bg-orange-100' : 'text-slate-300'}`}>Offline</span>
                     </div>
                 </div>
@@ -257,82 +261,46 @@ export const DocumentationPanel = () => {
                     </div>
                 </div>
 
-                {/* === SEQUENCE SUMMARY === */}
-                <div className="bg-slate-900 rounded-[2rem] p-8 lg:p-10 border border-slate-800 shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-brand-500 via-slate-900 to-slate-900"></div>
-                    <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-500 via-transparent to-transparent"></div>
-                    
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center border border-brand-500/30">
-                                <i className="ph-fill ph-git-merge text-brand-400 text-lg"></i>
-                            </div>
-                            <h3 className="text-white font-black text-xl tracking-wide">Data Flow Sequence</h3>
-                        </div>
-                        <p className="text-slate-400 text-sm mb-8 font-medium pl-11">เส้นทางของข้อมูล 1 รอบวิ่ง ตั้งแต่แตะริสแบนด์จนถึงหน้าจอมือถือ (Full Journey)</p>
-                        
-                        <div className="space-y-0 pl-3">
-                            {[
-                                { num: 1, icon: 'ph-contactless-payment', title: 'NFC Scan', desc: 'นักวิ่งแตะริสแบนด์ที่เสาสแกน → สร้าง JSON Payload', layer: 'BE', layerColor: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
-                                { num: 2, icon: 'ph-queue', title: 'Message Queue', desc: 'เข้าคิว Kafka/MQTT ป้องกัน Server ล่มจาก Data Flood', layer: 'BE', layerColor: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
-                                { num: 3, icon: 'ph-funnel', title: 'Validate', desc: 'กรองข้อมูลขยะ — สแกนรัว? ขี่สกู๊ตเตอร์? Payload เน่า?', layer: 'BE', layerColor: 'text-rose-400 bg-rose-500/10 border-rose-500/30' },
-                                { num: 4, icon: 'ph-calculator', title: 'Calculate Lap', desc: 'คำนวณ duration = timestamp นี้ − timestamp รอบก่อนหน้า', layer: 'BE', layerColor: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
-                                { num: 5, icon: 'ph-trophy', title: 'Check PB', desc: 'เทียบว่าเร็วกว่าสถิติเดิมไหม → ถ้าใช่ตั้ง is_pb = true', layer: 'BE + DB', layerColor: 'text-purple-400 bg-purple-500/10 border-purple-500/30' },
-                                { num: 6, icon: 'ph-hard-drives', title: 'Save to DB', desc: 'บันทึกถาวรลง PostgreSQL + อัปเดต Redis Cache', layer: 'DB', layerColor: 'text-purple-400 bg-purple-500/10 border-purple-500/30' },
-                                { num: 7, icon: 'ph-broadcast', title: 'WebSocket Push', desc: 'ดันข้อมูลผลลัพธ์ไปยังแอปมือถือแบบ Real-time', layer: 'BE → FE', layerColor: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
-                                { num: 8, icon: 'ph-atom', title: 'React State', desc: 'รับข้อมูล → Optimistic Update → เรียงลำดับ → เช็ค PB', layer: 'FE', layerColor: 'text-brand-400 bg-brand-500/10 border-brand-500/30' },
-                                { num: 9, icon: 'ph-device-mobile', title: 'UI Update', desc: 'อัปเดตกราฟ + ตัวเลข → ถ้า PB ก็กระพริบฉลอง!', layer: 'FE', layerColor: 'text-brand-400 bg-brand-500/10 border-brand-500/30' },
-                            ].map((step, i) => (
-                                <div key={i} className="flex items-stretch gap-6 group cursor-default">
-                                    {/* Timeline line + dot */}
-                                    <div className="flex flex-col items-center w-8 shrink-0">
-                                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black shrink-0 transition-all duration-300 group-hover:scale-110 z-10 
-                                            ${i === 0 ? 'border-amber-400 text-amber-400 bg-amber-400/20 shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
-                                            : i === 8 ? 'border-brand-400 text-brand-400 bg-brand-400/20 shadow-[0_0_15px_rgba(228,76,112,0.4)]' 
-                                            : 'border-slate-700 text-slate-400 bg-slate-900 group-hover:border-slate-500 group-hover:text-slate-300'}`}>
-                                            {step.num}
-                                        </div>
-                                        {i < 8 && <div className={`w-0.5 flex-1 min-h-[32px] transition-colors duration-500
-                                            ${i < 4 ? 'bg-gradient-to-b from-blue-500/20 to-blue-500/20 group-hover:from-blue-500/50 group-hover:to-blue-500/50' 
-                                            : i === 4 ? 'bg-gradient-to-b from-blue-500/20 to-purple-500/20 group-hover:from-blue-500/50 group-hover:to-purple-500/50' 
-                                            : i === 5 ? 'bg-gradient-to-b from-purple-500/20 to-emerald-500/20 group-hover:from-purple-500/50 group-hover:to-emerald-500/50' 
-                                            : i === 6 ? 'bg-gradient-to-b from-emerald-500/20 to-brand-500/20 group-hover:from-emerald-500/50 group-hover:to-brand-500/50' 
-                                            : 'bg-brand-500/20 group-hover:bg-brand-500/50'}`}></div>}
-                                    </div>
-                                    {/* Content */}
-                                    <div className={`flex-1 flex items-center gap-5 rounded-2xl px-5 py-4 mb-3 transition-all duration-300 group-hover:bg-slate-800/80 group-hover:translate-x-2 border border-transparent group-hover:border-slate-700/50 group-hover:shadow-lg ${i === 8 ? 'mb-0' : ''}`}>
-                                        <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 ${step.layerColor}`}>
-                                            <i className={`ph-fill ${step.icon} text-2xl`}></i>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-3 mb-1.5">
-                                                <span className="text-white font-bold text-sm tracking-wide">{step.title}</span>
-                                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${step.layerColor}`}>{step.layer}</span>
-                                            </div>
-                                            <p className="text-slate-400 text-xs font-medium leading-relaxed group-hover:text-slate-300 transition-colors">{step.desc}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        
-                        <div className="mt-8 pt-6 border-t border-slate-800 flex items-center gap-5 bg-slate-800/40 p-5 rounded-2xl relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border-2 border-emerald-500/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative z-10">
-                                <i className="ph-bold ph-lightning text-emerald-400 text-2xl animate-pulse"></i>
-                            </div>
-                            <div className="relative z-10">
-                                <p className="text-emerald-400 text-sm font-black tracking-wider uppercase mb-0.5">Total Latency: &lt; 1 วินาที</p>
-                                <p className="text-slate-400 text-xs font-medium">Sub-second end-to-end ตาม NFR-02 ของเอกสาร SRS</p>
-                            </div>
-                        </div>
+                {/* TAB NAVIGATION FOR SUB-DIAGRAMS */}
+                <div className="mt-12 flex justify-center">
+                    <div className="bg-slate-200/70 p-1 rounded-2xl inline-flex gap-1">
+                        <button 
+                            onClick={() => setDiagramTab('activity')}
+                            className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${diagramTab === 'activity' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <i className="ph-bold ph-git-branch text-base"></i> Activity Diagram (Data Flow)
+                        </button>
+                        <button 
+                            onClick={() => setDiagramTab('usecase')}
+                            className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${diagramTab === 'usecase' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <i className="ph-bold ph-users text-base"></i> Use Case Diagram
+                        </button>
+                        <button 
+                            onClick={() => setDiagramTab('db')}
+                            className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${diagramTab === 'db' ? 'bg-white text-slate-800 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <i className="ph-bold ph-database text-base"></i> Database Schema
+                        </button>
                     </div>
                 </div>
+
+                {/* === CONDITIONAL RENDERING OF TABS === */}
+
+                {/* 1. ACTIVITY DIAGRAM */}
+                {diagramTab === 'activity' && <ActivityDiagram />}
+
+                {/* 2. USE CASE DIAGRAM */}
+                {diagramTab === 'usecase' && <UseCaseDiagram />}
+
+                {/* 3. DATABASE SCHEMA */}
+                {diagramTab === 'db' && <DatabaseSchema />}
             </div>
 
-            {/* RIGHT: Sticky Detail Panel */}
-            <div className="w-[400px] shrink-0 border-l border-slate-200 bg-slate-50 sticky top-0 h-full overflow-y-auto">
-                <div className="p-6 h-full flex flex-col">
+            {/* RIGHT: Sticky Detail Panel (Only for Activity Diagram) */}
+            {diagramTab === 'activity' && (
+                <div className="w-[400px] shrink-0 border-l border-slate-200 bg-slate-50 sticky top-0 h-full overflow-y-auto z-30">
+                    <div className="p-6 h-full flex flex-col">
                     {activeNodeData ? (
                         <div className="animate-slide-up flex-1">
                             {/* Node Header */}
@@ -394,6 +362,7 @@ export const DocumentationPanel = () => {
                     )}
                 </div>
             </div>
+            )}
         </div>
     );
 };
